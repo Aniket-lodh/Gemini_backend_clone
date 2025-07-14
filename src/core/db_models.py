@@ -1,0 +1,97 @@
+from enum import Enum
+import time
+from typing import List, Optional
+from sqlalchemy import Column, Integer, func
+from sqlmodel import Field, Relationship, SQLModel
+
+from src.core.security import Security, TokenType
+
+
+class TableNameEnum(str, Enum):
+    Users = "users"
+    UserProfile = "user_profile"
+    Chatrooms = "chatrooms"
+    Messages = "messages"
+    Password = "password"
+
+
+class Users(SQLModel, table=True):
+    uid: str = Field(
+        primary_key=True,
+        index=True,
+        default_factory=lambda: Security.generate_unique_id(type=TokenType.UUID),
+    )
+    mobile_number: str = Field(unique=True, index=True, nullable=False)
+    email: str = Field(unique=True, index=True, nullable=True)
+    full_name: str = Field(nullable=True)
+    disabled: bool = Field(default=False)
+    confirmed: bool = Field(default=False)
+    created_at: Optional[int] = Field(default_factory=lambda: int(time.time()))
+    updated_at: Optional[int] = Field(
+        default=None,
+        sa_column=Column(Integer, onupdate=func.extract("epoch", func.now())),
+    )
+
+    chatrooms: List["Chatrooms"] = Relationship(back_populates="owner")
+    password: "Password" = Relationship(back_populates="user")
+
+
+class Password(SQLModel, table=True):
+    uid: str = Field(primary_key=True, foreign_key="users.uid", index=True)
+    password: str = Field(nullable=False)
+    updated_at: Optional[int] = Field(
+        default=None,
+        sa_column=Column(Integer, onupdate=func.extract("epoch", func.now())),
+    )
+    user: "Users" = Relationship(back_populates="password")
+
+
+class UserProfile(SQLModel, table=True):
+    upid: str = Field(
+        primary_key=True,
+        index=True,
+        default_factory=lambda: Security.generate_unique_id(type=TokenType.URL_SAFE),
+    )
+    user_id: str = Field(foreign_key="users.uid", index=True, nullable=False)
+    bio: str = Field(nullable=True)
+    created_at: Optional[int] = Field(default_factory=lambda: int(time.time()))
+    updated_at: Optional[int] = Field(
+        default=None,
+        sa_column=Column(Integer, onupdate=func.extract("epoch", func.now())),
+    )
+
+
+class Chatrooms(SQLModel, table=True):
+    chatroom_id: str = Field(
+        primary_key=True,
+        index=True,
+        default_factory=lambda: Security.generate_unique_id(type=TokenType.URL_SAFE),
+    )
+    owner_id: str = Field(foreign_key="users.uid", index=True, nullable=False)
+    name: str = Field(nullable=True)
+    created_at: Optional[int] = Field(default_factory=lambda: int(time.time()))
+    updated_at: Optional[int] = Field(
+        default=None,
+        sa_column=Column(Integer, onupdate=func.extract("epoch", func.now())),
+    )
+
+    owner: "Users" = Relationship(back_populates="chatrooms")
+    messages: List["Messages"] = Relationship(back_populates="chatroom")
+
+
+class Messages(SQLModel, table=True):
+    mid: str = Field(
+        primary_key=True,
+        index=True,
+        default_factory=lambda: Security.generate_unique_id(type=TokenType.URL_SAFE),
+    )
+    chatroom_id: str = Field(foreign_key="chatrooms.chatroom_id")
+    sender_id: str = Field(foreign_key="users.uid", index=True, nullable=False)
+    text: str = Field(nullable=False)
+    created_at: Optional[int] = Field(default_factory=lambda: int(time.time()))
+    updated_at: Optional[int] = Field(
+        default=None,
+        sa_column=Column(Integer, onupdate=func.extract("epoch", func.now())),
+    )
+
+    chatroom: "Chatrooms" = Relationship(back_populates="messages")
