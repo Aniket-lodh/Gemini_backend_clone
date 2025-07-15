@@ -30,7 +30,7 @@ def authentication_required(func):
         # Retrieve Authorization header and then extract token
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
-            return HTTPException(
+            raise HTTPException(
                 detail="Missing or invalid Authorization header.",
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
@@ -46,7 +46,7 @@ def authentication_required(func):
 
         except JWTError as e:
             print("JWT decode error:", e)
-            return HTTPException(
+            raise HTTPException(
                 detail="Invalid or expired token.",
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
@@ -58,25 +58,17 @@ def authentication_required(func):
             db_pool=db_pool,
         )
         if not exist_user or exist_user.disabled is True:
-            return HTTPException(
+            raise HTTPException(
                 detail="User account is inactive or invalid.",
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
         elif exist_user.confirmed is False:
-            return HTTPException(
+            raise HTTPException(
                 detail="Verify account to continue.",
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
 
         request.state.user = exist_user
-        # except Exception as e:
-        #     print("❌ Exception in JWT auth decorator:", str(e))
-        #     traceback.print_exc()
-        #     db_pool.rollback()
-        #     return format_response(
-        #         message="Authentication failed due to server error.",
-        #         status_code=status.HTTP_403_FORBIDDEN,
-        #     )
 
         return await func(*args, **kwargs)
 

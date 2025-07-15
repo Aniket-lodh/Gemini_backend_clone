@@ -56,7 +56,22 @@ class DataBasePool:
             cls._timeout = timeout
             with Session(cls._engine) as session:
                 cls._db_pool = session
-
+    @classmethod
+    def sync_setup(cls, timeout: Optional[float] = None):
+        if cls._engine == None:
+            cls._engine = create_engine(
+                DATABASE_URL,
+                pool_size=20,  # Maximum number of connections
+                max_overflow=10,  # Extra connections when pool maxed
+                pool_timeout=30,  # Seconds to wait for connection
+                pool_recycle=1800,  # Recycle connections after 30 mins
+                pool_pre_ping=True,  # Verify connection is valid
+                echo=False,
+            )
+            initDB(cls._engine)
+            cls._timeout = timeout
+            with Session(cls._engine) as session:
+                cls._db_pool = session
     @classmethod
     def get_pool(cls) -> Session:
         if not cls._db_pool:

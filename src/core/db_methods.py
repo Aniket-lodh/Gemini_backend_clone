@@ -1,7 +1,14 @@
 import logging
 import traceback
 from fastapi import HTTPException, status
-from src.core.db_models import Password, TableNameEnum, Users
+from src.core.db_models import (
+    Chatrooms,
+    Messages,
+    Password,
+    TableNameEnum,
+    UserProfile,
+    Users,
+)
 from typing import List, Optional, Tuple, TypeVar, Union
 from sqlmodel import SQLModel, Session, or_, select
 from sqlalchemy.exc import IntegrityError
@@ -73,7 +80,7 @@ class DB:
         data: dict,
         db_pool: Session,
         commit: bool = False,
-    ) -> Tuple[Optional[Users | Password | None], bool]:
+    ) -> Tuple[Optional[Users | Password | Messages | None], bool]:
         """
         Insert a new record into the database for the specified table.
 
@@ -98,6 +105,12 @@ class DB:
                 data = Users(**data)
             elif dbClassName == TableNameEnum.Password:
                 data = Password(**data)
+            elif dbClassName == TableNameEnum.Chatrooms:
+                data = Chatrooms(**data)
+            elif dbClassName == TableNameEnum.Messages:
+                data = Messages(**data)
+            elif dbClassName == TableNameEnum.UserProfile:
+                data = UserProfile(**data)
             else:
                 return None, False
 
@@ -158,6 +171,8 @@ class DB:
         try:
             if dbClassName == TableNameEnum.Users:
                 data = Users(**data)
+            elif dbClassName == TableNameEnum.Messages:
+                data = Messages(**data)
             else:
                 return None, False
             data = self._upsert_commit(data=data, db_pool=db_pool, commit=commit)
@@ -186,23 +201,25 @@ class DB:
     async def get_attr_all(
         self,
         dbClassName: TableNameEnum,
+        uid: str = None,
         limit: Optional[int | str] = 1,
         offset: Optional[int] = 0,
         order_by: Optional[str] = "desc",
         db_pool: Session = None,
-    ) -> list[Users]:
+    ) -> list[Chatrooms]:
         try:
             table = None
-            if dbClassName == TableNameEnum.Users:
-                statement = select(Users)
-
-                statement = statement.limit(limit if limit != "*" else None).offset(
-                    offset
+            if dbClassName == TableNameEnum.Chatrooms:
+                statement = (
+                    select(Chatrooms)
+                    .where(Chatrooms.owner_id == uid)
+                    .limit(limit if limit != "*" else None)
+                    .offset(offset)
                 )
-
                 if order_by == "asc":
-                    statement = statement.order_by(Users.created_at.asc())
-
+                    statement = statement.order_by(Chatrooms.created_at.asc())
+                else:
+                    statement = statement.order_by(Chatrooms.created_at.desc())
                 table = db_pool.exec(statement).all()
 
             return table
@@ -218,8 +235,10 @@ class DB:
         dbClassName: TableNameEnum,
         mobile_number: str = None,
         uid: str = None,
+        mid: str = None,
+        chatroom_id: str = None,
         db_pool: Session = None,
-    ) -> Optional[Users | None]:
+    ) -> Optional[Users | Chatrooms | Messages | None]:
         try:
             table = None
             if dbClassName == TableNameEnum.Users:
@@ -228,6 +247,20 @@ class DB:
                     statement = statement.where(Users.uid == uid)
                 if mobile_number:
                     statement = statement.where(Users.mobile_number == mobile_number)
+
+            if dbClassName == TableNameEnum.Chatrooms:
+                statement = select(Chatrooms)
+                if uid:
+                    statement = statement.where(Chatrooms.owner_id == uid)
+                if chatroom_id:
+                    statement = statement.where(Chatrooms.chatroom_id == chatroom_id)
+
+            if dbClassName == TableNameEnum.Messages:
+                statement = select(Messages)
+                if uid:
+                    statement = statement.where(Messages.sender_id == uid)
+                if mid: 
+                    statement = statement.where(Messages.mid == mid)
 
             table = db_pool.exec(statement).first()
             return table

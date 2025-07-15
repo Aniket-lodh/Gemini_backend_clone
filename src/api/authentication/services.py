@@ -52,7 +52,6 @@ async def register_user(
         )
 
     db_pool.commit()
-    print(created_user)
     return schemas.UserSchema(**created_user.model_dump())
 
 

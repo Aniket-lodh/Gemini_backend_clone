@@ -1,45 +1,63 @@
-from typing import Any, List
-from fastapi import APIRouter, Depends, HTTPException
+from typing import   List
+from fastapi import APIRouter, Depends, Request
+from sqlmodel import Session
 
-from src.api.authentication import schemas as auth_schemas, services as auth_services
 from src.api.chatroom import schemas, services
+from src.core.db_pool import DataBasePool
+from src.decorators.auth_required import authentication_required
+from src.decorators.catch_async import catch_async
 
 router = APIRouter(prefix="/chatroom", tags=["Chatroom"])
 
 
-@router.post("/")
+@router.post("/", description="Creates a new chatroom for the authenticated user.")
+@catch_async
+@authentication_required
 async def create_chatroom(
-    user: auth_schemas.User = Depends(auth_services.get_current_user),
-) -> schemas.Chatroom:
-    """Creates a new chatroom for the authenticated user."""
-    chatroom = await services.create_chatroom(user.id)
-    return chatroom
+    request: Request,
+    payload: schemas.ChatroomCreate,
+    db_pool: Session = Depends(DataBasePool.get_pool),
+):
+    return await services.create_chatroom(request.state.user.uid, payload, db_pool)
 
 
-@router.get("/", response_model=List[schemas.Chatroom])
+@router.get(
+    "/",
+    description="Lists all chatrooms for the authenticated user.",
+    response_model=List[schemas.Chatroom],
+)
+@catch_async
+@authentication_required
 async def list_chatrooms(
-    user: auth_schemas.User = Depends(auth_services.get_current_user),
-) -> Any:
-    """Lists all chatrooms for the user (use caching here)."""
-    chatrooms = await services.list_chatrooms(user.id)
-    return chatrooms
+    request: Request,
+    db_pool: Session = Depends(DataBasePool.get_pool),
+):
+    return await services.list_chatrooms(request.state.user.uid, db_pool)
 
 
-@router.get("/{id}", response_model=schemas.Chatroom)
+@router.get(
+    "/{id}",
+    description="Retrieves detailed information about a specific chatroom.",
+    response_model=schemas.Chatroom,
+)
+@catch_async
+@authentication_required
 async def get_chatroom(
-    id: int, user: auth_schemas.User = Depends(auth_services.get_current_user)
-) -> Any:
-    """Retrieves detailed information about a specific chatroom."""
-    chatroom = await services.get_chatroom(id, user.id)
-    return chatroom
+    id: str,
+    request: Request,
+    db_pool: Session = Depends(DataBasePool.get_pool),
+):
+    return await services.get_chatroom(id, request.state.user.uid, db_pool)
 
 
-@router.post("/{id}/message")
+@router.post("/{id}/message", description="Sends a message to a specific chatroom.")
+@catch_async
+@authentication_required
 async def send_message(
-    id: int,
-    message: schemas.MessageCreate,
-    user: auth_schemas.User = Depends(auth_services.get_current_user),
+    id: str,
+    request: Request,
+    payload: schemas.MessageCreate,
+    db_pool: Session = Depends(DataBasePool.get_pool),
 ) -> dict[str, str]:
-    """Sends a message and receives a Gemini response (via queue/async call)."""
-    await services.send_message(id, user.id, message.text)
+    await services.send_message(id, request.state.user.uid, payload, db_pool)
     return {"message": "Message sent and processing."}

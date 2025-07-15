@@ -8,7 +8,8 @@ from scalar_fastapi import get_scalar_api_reference
 from src.middlewares.exceptions import ExceptionHandlingMiddleware
 from src.middlewares.block_sensitive_path import BlockSensitivePathsMiddleware
 from src.api.authentication.views import router as auth_router
-# from src.api.chatroom.views import router as chatroom_router
+from src.api.user.views import router as user_router
+from src.api.chatroom.views import router as chatroom_router
 # from src.api.subscription.views import router as subscription_router
 # from src.webhook.views import router as webhook_router
 
@@ -41,7 +42,8 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
-# app.include_router(chatroom_router)
+app.include_router(user_router)
+app.include_router(chatroom_router)
 # app.include_router(subscription_router)
 # app.include_router(webhook_router)
 

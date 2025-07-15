@@ -88,6 +88,8 @@ class Messages(SQLModel, table=True):
     chatroom_id: str = Field(foreign_key="chatrooms.chatroom_id")
     sender_id: str = Field(foreign_key="users.uid", index=True, nullable=False)
     text: str = Field(nullable=False)
+    response: str = Field(nullable=True)
+    status: str = Field(default="pending", nullable=False)
     created_at: Optional[int] = Field(default_factory=lambda: int(time.time()))
     updated_at: Optional[int] = Field(
         default=None,

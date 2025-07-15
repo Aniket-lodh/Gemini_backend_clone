@@ -1,4 +1,3 @@
-from collections import deque
 import os
 from dotenv import load_dotenv
 
@@ -16,8 +15,9 @@ DATABASE_DB = os.getenv("DATABASE_DB", "gemini_backend_clone")
 DATABASE_USER = os.getenv("DATABASE_USER", "postgres")
 DATABASE_PASS = os.getenv("DATABASE_PASS", "")
 DATABASE_URL = f"postgresql://{DATABASE_USER}:{DATABASE_PASS}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_DB}"
+
 ## LLM ##
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 ## REDIS ##
 REDIS_HOST = os.getenv("REDIS_HOST", "")
