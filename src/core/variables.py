@@ -31,6 +31,8 @@ STRIPE_PRO_PRICE_ID = os.getenv("STRIPE_PRO_PRICE_ID", "")
 STRIPE_CANCEL_URL = os.getenv("STRIPE_CANCEL_URL", "")
 STRIPE_SUCCESS_URL = os.getenv("STRIPE_SUCCESS_URL", "")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+
+## CORS ##
 origins = [
     "http://localhost",
     "https://localhost",

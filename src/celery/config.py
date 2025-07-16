@@ -1,6 +1,5 @@
 from celery import Celery
 from src.core.variables import REDIS_URL
-from celery.schedules import crontab
 
 celery_app = Celery(
     "gemini_backend_message_tasks",
@@ -22,7 +21,7 @@ celery_app.conf.update(
     task_reject_on_worker_lost=True,  # Reject tasks if worker disconnects
     task_track_started=True,
     task_send_sent_event=True,
-    worker_max_tasks_per_child=1000,  # after 1000 taks worker will restart
+    worker_max_tasks_per_child=1000,  # after 1000 tasks worker will restart
     broker_connection_retry_on_startup=True,
     worker_log_format="[%(asctime)s: %(levelname)s/%(processName)s] %(message)s",
     worker_task_log_format="[%(asctime)s: %(levelname)s/%(processName)s] [%(task_name)s] %(message)s",

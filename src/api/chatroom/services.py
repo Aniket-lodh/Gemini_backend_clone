@@ -25,7 +25,10 @@ async def create_chatroom(
             detail="Failed to create chatroom, please try again later.",
         )
     db_pool.commit()
-    return schemas.ChatroomCreate(**created_chatroom.model_dump())
+    return format_response(
+        message="Chatroom created.",
+        data=schemas.ChatroomCreate(**created_chatroom.model_dump()).model_dump(),
+    )
 
 
 async def list_chatrooms(user_id: str, db_pool: Session) -> List[schemas.Chatroom]:
@@ -85,12 +88,15 @@ async def send_message(
         message_text=payload.text,
     )
     db_pool.commit()
-    return format_response(message="Message sent and processing.")
+    return format_response(
+        message="Message sent and processing.",
+        data=schemas.Message(**created_message_record.model_dump()),
+    )
 
 
 async def process_gemini_response(
     message_id: str, response_text: str, db_pool: Session
-) -> None:
+):
     """Processes the Gemini API response and stores it as a new message."""
     existing_message = await db.get_attr(
         dbClassName=TableNameEnum.Messages, mid=message_id, db_pool=db_pool

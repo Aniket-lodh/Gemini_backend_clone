@@ -51,6 +51,22 @@ async def register_user(
             detail="Failed to register, please try again later.",
         )
 
+    # Creating a basic plan for user by default.
+    _, ok = await db.insert(
+        dbClassName=TableNameEnum.UserPlan,
+        data={
+            "user_id": created_user.uid,
+            "active": True,
+            "plan": "basic",
+        },
+        db_pool=db_pool,
+    )
+    if ok is False:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to register, please try again later.",
+        )
+
     db_pool.commit()
     return format_response(
         message="User registered",

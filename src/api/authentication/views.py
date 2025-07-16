@@ -13,7 +13,6 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 @router.post(
     "/signup",
     description="Registers a new user with mobile number and optional info.",
-    response_model=schemas.UserSchema,
 )
 @catch_async
 async def signup(
@@ -30,7 +29,7 @@ async def signup(
 async def send_otp(
     mobile_number: schemas.MobileNumber,
     db_pool: Session = Depends(DataBasePool.get_pool),
-) -> schemas.OTPResponse:
+):
     return await services.generate_otp(mobile_number.mobile_number, db_pool)
 
 
@@ -51,7 +50,7 @@ async def verify_otp(
 async def forgot_password(
     mobile_number: schemas.MobileNumber,
     db_pool: Session = Depends(DataBasePool.get_pool),
-) -> schemas.OTPResponse:
+):
     return await services.generate_otp(mobile_number.mobile_number, db_pool)
 
 

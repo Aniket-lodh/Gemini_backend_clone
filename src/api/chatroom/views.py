@@ -1,4 +1,3 @@
-from typing import List
 from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session
 from src.api.chatroom import schemas, services
@@ -6,8 +5,8 @@ from src.core.db_pool import DataBasePool
 from src.decorators.auth_required import authentication_required
 from src.decorators.catch_async import catch_async
 from src.core.limiter import limiter
-
-# from fastapi_cache.decorator import cache
+from src.utils.caching import cache_response
+from src.utils.format_response import format_response
 
 
 router = APIRouter(prefix="/chatroom", tags=["Chatroom"])
@@ -27,10 +26,9 @@ async def create_chatroom(
 @router.get(
     "/",
     description="Lists all chatrooms for the authenticated user.",
-    response_model=List[schemas.Chatroom],
 )
-# @cache(expire=300)
 @catch_async
+@cache_response(ttl=300)
 @authentication_required
 async def list_chatrooms(
     request: Request,
@@ -51,7 +49,10 @@ async def get_chatroom(
     request: Request,
     db_pool: Session = Depends(DataBasePool.get_pool),
 ):
-    return await services.get_chatroom(id, request.state.user.uid, db_pool)
+    existing_chatroom = await services.get_chatroom(id, request.state.user.uid, db_pool)
+    return format_response(
+        message="Chatroom details fetched", data=existing_chatroom.model_dump()
+    )
 
 
 @router.post("/{id}/message", description="Sends a message to a specific chatroom.")

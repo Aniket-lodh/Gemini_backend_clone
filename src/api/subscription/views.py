@@ -16,8 +16,9 @@ router = APIRouter(prefix="/subscribe", tags=["Subscription"])
 async def subscribe_pro(
     request: Request,
     db_pool: Session = Depends(DataBasePool.get_pool),
-) -> schemas.StripeCheckoutResponse:
+):
     return await services.initiate_stripe_checkout(request.state.user.uid, db_pool)
+
 
 # TODO: Implement this, Implement what to do in checkout page.
 # @router.get(

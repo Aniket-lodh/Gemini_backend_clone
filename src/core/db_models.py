@@ -52,10 +52,11 @@ class UserPlan(SQLModel, table=True):
     )
     user_id: str = Field(foreign_key="users.uid", index=True)
     active: bool
-    stripe_subscription_status: str = Field(nullable=True)
+    plan: str
     created_at: Optional[int] = Field(default_factory=lambda: int(time.time()))
 
     user: "Users" = Relationship(back_populates="plan")
+
 
 class Transactions(SQLModel, table=True):
     transaction_id: str = Field(
@@ -63,8 +64,9 @@ class Transactions(SQLModel, table=True):
         index=True,
         default_factory=lambda: Security.generate_unique_id(type=TokenType.URL_SAFE),
     )
-    user_id: str = Field(
-        foreign_key="users.uid", index=True, nullable=False
+    user_id: str = Field(foreign_key="users.uid", index=True, nullable=False)
+    plan_id: Optional[str] = Field(
+        foreign_key="userplan.plan_id", default=None, index=True, nullable=False
     )
     status: str = Field(nullable=False)
     amount: int = Field(nullable=False)
@@ -74,7 +76,6 @@ class Transactions(SQLModel, table=True):
     expires_at: Optional[int] = Field(nullable=True)
 
     user: "Users" = Relationship(back_populates="transactions")
-    
 
 
 class Password(SQLModel, table=True):
@@ -138,4 +139,3 @@ class Messages(SQLModel, table=True):
     )
 
     chatroom: "Chatrooms" = Relationship(back_populates="messages")
-

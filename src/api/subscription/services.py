@@ -11,6 +11,7 @@ from src.core.variables import (
     STRIPE_SUCCESS_URL,
     STRIPE_CANCEL_URL,
 )
+from src.utils.format_response import format_response
 
 
 stripe.api_key = STRIPE_SECRET_KEY
@@ -31,8 +32,7 @@ async def initiate_stripe_checkout(user_id: int, db_pool: Session):
         # Creating a stripe customer if one doesn't exist
         if not user.stripe_customer_id:
             customer = stripe.Customer.create(email=user.email)
-            print("customer_id", customer.id)
-            updated_user, ok = await db.update(
+            _, ok = await db.update(
                 dbClassName=TableNameEnum.Users,
                 data={
                     **user.model_dump(),
@@ -45,7 +45,6 @@ async def initiate_stripe_checkout(user_id: int, db_pool: Session):
                     detail="Failed to update user",
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
-            print(updated_user)
             user.stripe_customer_id = customer.id
         else:
             customer = stripe.Customer.retrieve(user.stripe_customer_id)
@@ -83,9 +82,11 @@ async def initiate_stripe_checkout(user_id: int, db_pool: Session):
                 detail="Failed to create transaction record.",
             )
         db_pool.commit()
-        return schemas.StripeCheckoutResponse(session_id=checkout_session.id)
-    except Exception as e:
-        transaction
+        return format_response(
+            message="Checkout session created",
+            data=schemas.StripeCheckoutResponse(session_id=checkout_session.id),
+        )
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to subscribe to pro plan, please try again later.",

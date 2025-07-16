@@ -20,24 +20,6 @@ def format_response(
     :param additional_data: A dictionary of additional data to include in the response body (default: None).
     For additional_data to get included in response body, data has to be a dict.
     :return: A JSONResponse object with the provided data.
-
-    ```python
-    from fastapi import FastAPI
-
-    app = FastAPI()
-
-    @app.get("/user_plans")
-    async def get_user_plans():
-        # Suppose serialized_cur_user_plans is your data
-        serialized_cur_user_plans = {"plan": "Basic", "valid_until": "2025-01-01"}
-
-        return format_response(
-            message="Fetched User plans",
-            status=200,
-            data=serialized_cur_user_plans
-        )
-
-    ```
     """
     try:
         response_content = {

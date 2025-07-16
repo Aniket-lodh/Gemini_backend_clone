@@ -16,3 +16,14 @@ class ChatroomCreate(BaseModel):
 
 class MessageCreate(BaseModel):
     text: str
+
+
+class Message(BaseModel):
+    mid: str
+    chatroom_id: str
+    sender_id: str
+    text: str
+    response: Optional[str] = None
+    status: str
+    created_at: Optional[int] = None
+    updated_at: Optional[int] = None

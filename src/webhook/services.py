@@ -19,24 +19,21 @@ async def process_stripe_webhook(
             sig_header=stripe_signature,
             secret=STRIPE_WEBHOOK_SECRET,
         )
-    except Exception as e:
-        return None  # Signature or webhook secret isinvalid
+    except Exception:
+        return None  # Signature or webhook secret is invalid
 
     event_type = event["type"]
     data = event["data"]["object"]
 
     print("event_type", event_type)
+    session_id = data.get("id")
     if event_type == "checkout.session.completed":
         customer_id = data.get("customer")
-        session_id = data.get("id")
         return await handle_checkout_completed(customer_id, session_id, db_pool)
+    elif event_type == "checkout.session.expired":
+        return await handle_checkout_expired(session_id, db_pool)
 
-    # elif event_type == "customer.subscription.deleted":
-    #     customer_id = data.get("customer")
-    #     return handle_subscription_deleted(customer_id)
-
-    # Add more handlers if needed
-    return True  # Unhandled event, but valid signature
+    return True  # Unhandled event, but valid signature, so we simply return 200
 
 
 async def handle_checkout_completed(
@@ -56,26 +53,12 @@ async def handle_checkout_completed(
             raise HTTPException(
                 detail="Transaction not found", status_code=status.HTTP_404_NOT_FOUND
             )
-        updated_user, ok = await db.update(
-            dbClassName=TableNameEnum.Transactions,
-            data={
-                **existing_transaction.model_dump(),
-                "status": "completed",
-            },
-            db_pool=db_pool,
-        )
-        if ok is False:
-            raise HTTPException(
-                detail="Failed to update transaction",
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
         new_plan, ok = await db.insert(
             dbClassName=TableNameEnum.UserPlan,
             data={
                 "user_id": user.uid,
                 "active": True,
-                "stripe_subscription_status": "active",
+                "plan": "pro",
             },
             db_pool=db_pool,
         )
@@ -84,5 +67,50 @@ async def handle_checkout_completed(
                 detail="Failed to create new plan",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+        _, ok = await db.update(
+            dbClassName=TableNameEnum.Transactions,
+            data={
+                **existing_transaction.model_dump(),
+                "status": "completed",
+                "plan_id": new_plan.plan_id,
+            },
+            db_pool=db_pool,
+        )
+        if ok is False:
+            raise HTTPException(
+                detail="Failed to update transaction",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        
+    db_pool.commit()
+    return True
+
+
+async def handle_checkout_expired(session_id: str, db_pool: Session):
+    existing_transaction = await db.get_attr(
+        dbClassName=TableNameEnum.Transactions,
+        transaction_id=session_id,
+        db_pool=db_pool,
+    )
+    if existing_transaction is None:
+        raise HTTPException(
+            detail="Transaction not found.",
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+
+    _, ok = await db.update(
+        dbClassName=TableNameEnum.Transactions,
+        data={
+            **existing_transaction.model_dump(),
+            "status": "expired",
+        },
+        db_pool=db_pool,
+    )
+    if not ok:
+        raise HTTPException(
+            detail="Failed to update expired transaction",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
     db_pool.commit()
     return True

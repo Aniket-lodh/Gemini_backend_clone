@@ -82,7 +82,7 @@ class DB:
         data: dict,
         db_pool: Session,
         commit: bool = False,
-    ) -> Tuple[Optional[Users | Password | Messages | None], bool]:
+    ) -> Tuple[Optional[Users | Password | Messages | UserPlan | None], bool]:
         """
         Insert a new record into the database for the specified table.
 
@@ -150,7 +150,7 @@ class DB:
         db_pool: Session,
         commit: bool = False,
     ) -> Tuple[
-        Optional[Users | None],
+        Optional[Users | Messages | Transactions | None],
         bool,
     ]:
         """
@@ -273,11 +273,13 @@ class DB:
                     statement = statement.where(Messages.sender_id == uid)
                 if mid:
                     statement = statement.where(Messages.mid == mid)
-            
+
             if dbClassName == TableNameEnum.Transactions:
                 statement = select(Transactions)
                 if transaction_id:
-                    statement = statement.where(Transactions.transaction_id == transaction_id)
+                    statement = statement.where(
+                        Transactions.transaction_id == transaction_id
+                    )
 
             table = db_pool.exec(statement).first()
             return table
