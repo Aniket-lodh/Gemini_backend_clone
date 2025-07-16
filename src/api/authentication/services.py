@@ -52,7 +52,10 @@ async def register_user(
         )
 
     db_pool.commit()
-    return schemas.UserSchema(**created_user.model_dump())
+    return format_response(
+        message="User registered",
+        data=schemas.UserSchema(**created_user.model_dump()).model_dump(),
+    )
 
 
 async def generate_otp(mobile_number: str, db_pool: Session) -> str:
@@ -67,7 +70,9 @@ async def generate_otp(mobile_number: str, db_pool: Session) -> str:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid mobile number",
         )
-    return schemas.OTPResponse(otp="123456")
+    return format_response(
+        message="OTP sent", data=schemas.OTPResponse(otp="123456").model_dump()
+    )
 
 
 async def verify_otp(otp_verification: schemas.OTPVerification, db_pool: Session):
@@ -101,7 +106,10 @@ async def verify_otp(otp_verification: schemas.OTPVerification, db_pool: Session
         )
 
     token = create_jwt_token(data={"sub": str(existing_user.uid)})
-    return schemas.Token(access_token=token, token_type="bearer")
+    return format_response(
+        message="OTP verified successfully.",
+        data=schemas.Token(access_token=token, token_type="bearer").model_dump(),
+    )
 
 
 def create_jwt_token(
@@ -178,7 +186,7 @@ async def change_password(
         user.password.password = hash_password(change_password.new_password)
         db_pool.add(user.password)
         db_pool.commit()
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             detail="Failed to update password",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
