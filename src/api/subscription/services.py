@@ -84,7 +84,9 @@ async def initiate_stripe_checkout(user_id: int, db_pool: Session):
         db_pool.commit()
         return format_response(
             message="Checkout session created",
-            data=schemas.StripeCheckoutResponse(session_id=checkout_session.id, checkout_url=checkout_session.url).model_dump(),
+            data=schemas.StripeCheckoutResponse(
+                session_id=checkout_session.id, checkout_url=checkout_session.url
+            ).model_dump(),
         )
     except Exception:
         raise HTTPException(
@@ -96,7 +98,10 @@ async def initiate_stripe_checkout(user_id: int, db_pool: Session):
 async def get_subscription_status(user_id: str, db_pool: Session):
     """Retrieves the user's subscription status."""
     user_plan = await db.get_attr(
-        dbClassName=TableNameEnum.UserPlan, uid=user_id, db_pool=db_pool
+        dbClassName=TableNameEnum.UserPlan,
+        uid=user_id,
+        where={"active": True},
+        db_pool=db_pool,
     )
     if user_plan is None:
         raise HTTPException(

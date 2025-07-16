@@ -40,7 +40,7 @@ class Users(SQLModel, table=True):
     chatrooms: List["Chatrooms"] = Relationship(back_populates="owner")
     password: "Password" = Relationship(back_populates="user")
 
-    plan: "UserPlan" = Relationship(back_populates="user")
+    plan: List["UserPlan"] = Relationship(back_populates="user")
     transactions: List["Transactions"] = Relationship(back_populates="user")
 
 

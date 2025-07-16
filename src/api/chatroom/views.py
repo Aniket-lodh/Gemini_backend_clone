@@ -4,7 +4,7 @@ from src.api.chatroom import schemas, services
 from src.core.db_pool import DataBasePool
 from src.decorators.auth_required import authentication_required
 from src.decorators.catch_async import catch_async
-from src.core.limiter import limiter
+from src.core.limiter import limiter, rate_limit_by_plan
 from src.utils.caching import cache_response
 from src.utils.format_response import format_response
 
@@ -56,9 +56,9 @@ async def get_chatroom(
 
 
 @router.post("/{id}/message", description="Sends a message to a specific chatroom.")
-@limiter.limit("5/minute")
 @catch_async
 @authentication_required
+@rate_limit_by_plan(limiter)
 async def send_message(
     id: str,
     request: Request,
