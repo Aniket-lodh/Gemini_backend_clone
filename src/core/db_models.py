@@ -66,7 +66,7 @@ class Transactions(SQLModel, table=True):
     )
     user_id: str = Field(foreign_key="users.uid", index=True, nullable=False)
     plan_id: Optional[str] = Field(
-        default=None, foreign_key="userplan.plan_id", index=True, nullable=False
+        default=None, foreign_key="userplan.plan_id", index=True, nullable=True
     )
     status: str = Field(nullable=False)
     amount: int = Field(nullable=False)
