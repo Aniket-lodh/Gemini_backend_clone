@@ -63,7 +63,7 @@ async def initiate_stripe_checkout(user_id: int, db_pool: Session):
             cancel_url=STRIPE_CANCEL_URL,
         )
 
-        transaction, ok = await db.insert(
+        _, ok = await db.insert(
             dbClassName=TableNameEnum.Transactions,
             data={
                 "transaction_id": checkout_session.id,
@@ -91,3 +91,19 @@ async def initiate_stripe_checkout(user_id: int, db_pool: Session):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to subscribe to pro plan, please try again later.",
         )
+
+
+async def get_subscription_status(user_id: str, db_pool: Session):
+    """Retrieves the user's subscription status."""
+    user_plan = await db.get_attr(
+        dbClassName=TableNameEnum.UserPlan, uid=user_id, db_pool=db_pool
+    )
+    if user_plan is None:
+        raise HTTPException(
+            detail="User plan not found", status_code=status.HTTP_404_NOT_FOUND
+        )
+
+    return format_response(
+        message="Subscription status retrieved",
+        data=schemas.SubscriptionStatus(**user_plan.model_dump()).model_dump(),
+    )

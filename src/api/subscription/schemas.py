@@ -6,5 +6,5 @@ class StripeCheckoutResponse(BaseModel):
 
 
 class SubscriptionStatus(BaseModel):
-    status: str  # "basic" or "pro"
- 
+    active: bool
+    plan: str

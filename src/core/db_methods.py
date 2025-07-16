@@ -247,8 +247,9 @@ class DB:
         customer_id: str = None,
         chatroom_id: str = None,
         transaction_id: str = None,
+        plan_id: str = None,
         db_pool: Session = None,
-    ) -> Optional[Users | Chatrooms | Messages | Transactions | None]:
+    ) -> Optional[Users | Chatrooms | Messages | Transactions | UserPlan | None]:
         try:
             table = None
             if dbClassName == TableNameEnum.Users:
@@ -280,6 +281,13 @@ class DB:
                     statement = statement.where(
                         Transactions.transaction_id == transaction_id
                     )
+            if dbClassName == TableNameEnum.UserPlan:
+                statement = select(UserPlan)
+                if plan_id:
+                    statement = statement.where(UserPlan.plan_id == plan_id)
+                if uid:
+                    statement = statement.where(UserPlan.user_id == uid)
+
 
             table = db_pool.exec(statement).first()
             return table

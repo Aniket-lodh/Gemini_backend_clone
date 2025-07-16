@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session
 
-from src.api.subscription import schemas, services
+from src.api.subscription import services
 from src.core.db_pool import DataBasePool
 from src.decorators.auth_required import authentication_required
 from src.decorators.catch_async import catch_async
@@ -20,16 +20,16 @@ async def subscribe_pro(
     return await services.initiate_stripe_checkout(request.state.user.uid, db_pool)
 
 
-# TODO: Implement this, Implement what to do in checkout page.
-# @router.get(
-#     "/status",
-#     description="Checks the user's current subscription tier (Basic or Pro).",
-#     response_model=schemas.SubscriptionStatus,
-# )
-# @catch_async
-# @authentication_required
-# async def get_subscription_status(request: Request):
-#     return await services.get_subscription_status(request.state.user.uid)
+@router.get(
+    "/status",
+    description="Checks the user's current subscription tier (Basic or Pro).",
+)
+@catch_async
+@authentication_required
+async def get_subscription_status(
+    request: Request, db_pool: Session = Depends(DataBasePool.get_pool)
+):
+    return await services.get_subscription_status(request.state.user.uid, db_pool)
 
 
 @router.get(
