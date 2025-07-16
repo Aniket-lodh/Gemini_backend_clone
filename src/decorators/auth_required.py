@@ -7,6 +7,7 @@ import traceback
 from typing import Optional
 from src.core.db_models import TableNameEnum
 from src.core.db_methods import DB
+from src.decorators.jwt import decode_jwt_token, extract_token_from_request
 
 from src.utils.format_response import format_response
 from src.core.variables import JWT_SECRET
@@ -17,7 +18,6 @@ db = DB()
 def authentication_required(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        # try:
         db_pool: Session = kwargs.get("db_pool")
         request: Request = kwargs.get("request")
 
@@ -27,34 +27,14 @@ def authentication_required(func):
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Retrieve Authorization header and then extract token
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer "):
-            raise HTTPException(
-                detail="Missing or invalid Authorization header.",
-                status_code=status.HTTP_401_UNAUTHORIZED,
-            )
+        # Retrieve Authorization header and then extract the token
+        token = extract_token_from_request(request)
+        payload = decode_jwt_token(token)
+        user_id = payload["sub"]
 
-        token = auth_header.split(" ")[1]
-
-        try:
-            payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-            sub: str = payload.get("sub")
-
-            if not sub:
-                raise JWTError("Invalid payload structure")
-
-        except JWTError as e:
-            print("JWT decode error:", e)
-            raise HTTPException(
-                detail="Invalid or expired token.",
-                status_code=status.HTTP_401_UNAUTHORIZED,
-            )
-
-        # Optionally check if the user is still active in DB
         exist_user = await db.get_attr(
             dbClassName=TableNameEnum.Users,
-            uid=sub,
+            uid=user_id,
             db_pool=db_pool,
         )
         if not exist_user or exist_user.disabled is True:

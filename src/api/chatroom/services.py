@@ -33,9 +33,10 @@ async def list_chatrooms(user_id: str, db_pool: Session) -> List[schemas.Chatroo
     existing_chatrooms = await db.get_attr_all(
         dbClassName=TableNameEnum.Chatrooms, uid=user_id, db_pool=db_pool
     )
-    return [
-        schemas.Chatroom(**chatroom.model_dump()) for chatroom in existing_chatrooms
-    ]
+    return format_response(
+        message="Chatrooms retrieved.",
+        data=[chatroom.model_dump() for chatroom in existing_chatrooms],
+    )
 
 
 async def get_chatroom(

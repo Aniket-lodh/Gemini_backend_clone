@@ -12,9 +12,6 @@ from src.api.user.views import router as user_router
 from src.api.chatroom.views import router as chatroom_router
 from src.api.subscription.views import router as subscription_router
 from src.webhook.views import router as webhook_router
-# from fastapi_cache import FastAPICache
-# from fastapi_cache.backends.redis import RedisBackend
-# from redis import asyncio as aioredis
 
 from src.core.limiter import limiter
 from slowapi.errors import RateLimitExceeded
@@ -24,8 +21,6 @@ from slowapi import _rate_limit_exceeded_handler
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await DataBasePool.setup()
-    # redis = aioredis.from_url(REDIS_URL)
-    # FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
     yield
     await DataBasePool.teardown()
 
