@@ -84,7 +84,7 @@ async def initiate_stripe_checkout(user_id: int, db_pool: Session):
         db_pool.commit()
         return format_response(
             message="Checkout session created",
-            data=schemas.StripeCheckoutResponse(session_id=checkout_session.id),
+            data=schemas.StripeCheckoutResponse(session_id=checkout_session.id).model_dump(),
         )
     except Exception:
         raise HTTPException(
