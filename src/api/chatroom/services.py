@@ -5,6 +5,7 @@ from src.core.db_models import TableNameEnum
 from src.core.db_methods import DB
 from src.api.chatroom import schemas
 from src.celery import service
+from src.utils.format_response import format_response
 
 db = DB()
 
@@ -83,7 +84,7 @@ async def send_message(
         message_text=payload.text,
     )
     db_pool.commit()
-    return
+    return format_response(message="Message sent and processing.")
 
 
 async def process_gemini_response(

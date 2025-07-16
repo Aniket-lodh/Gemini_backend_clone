@@ -6,6 +6,8 @@ from src.core.db_models import (
     Messages,
     Password,
     TableNameEnum,
+    Transactions,
+    UserPlan,
     UserProfile,
     Users,
 )
@@ -111,6 +113,10 @@ class DB:
                 data = Messages(**data)
             elif dbClassName == TableNameEnum.UserProfile:
                 data = UserProfile(**data)
+            elif dbClassName == TableNameEnum.Transactions:
+                data = Transactions(**data)
+            elif dbClassName == TableNameEnum.UserPlan:
+                data = UserPlan(**data)
             else:
                 return None, False
 
@@ -173,6 +179,8 @@ class DB:
                 data = Users(**data)
             elif dbClassName == TableNameEnum.Messages:
                 data = Messages(**data)
+            elif dbClassName == TableNameEnum.Transactions:
+                data = Transactions(**data)
             else:
                 return None, False
             data = self._upsert_commit(data=data, db_pool=db_pool, commit=commit)
@@ -236,9 +244,11 @@ class DB:
         mobile_number: str = None,
         uid: str = None,
         mid: str = None,
+        customer_id: str = None,
         chatroom_id: str = None,
+        transaction_id: str = None,
         db_pool: Session = None,
-    ) -> Optional[Users | Chatrooms | Messages | None]:
+    ) -> Optional[Users | Chatrooms | Messages | Transactions | None]:
         try:
             table = None
             if dbClassName == TableNameEnum.Users:
@@ -247,6 +257,8 @@ class DB:
                     statement = statement.where(Users.uid == uid)
                 if mobile_number:
                     statement = statement.where(Users.mobile_number == mobile_number)
+                if customer_id:
+                    statement = statement.where(Users.stripe_customer_id == customer_id)
 
             if dbClassName == TableNameEnum.Chatrooms:
                 statement = select(Chatrooms)
@@ -259,8 +271,13 @@ class DB:
                 statement = select(Messages)
                 if uid:
                     statement = statement.where(Messages.sender_id == uid)
-                if mid: 
+                if mid:
                     statement = statement.where(Messages.mid == mid)
+            
+            if dbClassName == TableNameEnum.Transactions:
+                statement = select(Transactions)
+                if transaction_id:
+                    statement = statement.where(Transactions.transaction_id == transaction_id)
 
             table = db_pool.exec(statement).first()
             return table

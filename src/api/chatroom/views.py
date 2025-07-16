@@ -1,11 +1,14 @@
-from typing import   List
+from typing import List
 from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session
-
 from src.api.chatroom import schemas, services
 from src.core.db_pool import DataBasePool
 from src.decorators.auth_required import authentication_required
 from src.decorators.catch_async import catch_async
+from src.core.limiter import limiter
+
+# from fastapi_cache.decorator import cache
+
 
 router = APIRouter(prefix="/chatroom", tags=["Chatroom"])
 
@@ -26,6 +29,7 @@ async def create_chatroom(
     description="Lists all chatrooms for the authenticated user.",
     response_model=List[schemas.Chatroom],
 )
+# @cache(expire=300)
 @catch_async
 @authentication_required
 async def list_chatrooms(
@@ -51,6 +55,7 @@ async def get_chatroom(
 
 
 @router.post("/{id}/message", description="Sends a message to a specific chatroom.")
+@limiter.limit("5/minute")
 @catch_async
 @authentication_required
 async def send_message(
@@ -58,6 +63,5 @@ async def send_message(
     request: Request,
     payload: schemas.MessageCreate,
     db_pool: Session = Depends(DataBasePool.get_pool),
-) -> dict[str, str]:
-    await services.send_message(id, request.state.user.uid, payload, db_pool)
-    return {"message": "Message sent and processing."}
+):
+    return await services.send_message(id, request.state.user.uid, payload, db_pool)
