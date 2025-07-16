@@ -53,6 +53,24 @@ async def handle_checkout_completed(
             raise HTTPException(
                 detail="Transaction not found", status_code=status.HTTP_404_NOT_FOUND
             )
+        # Deactive user old plan.
+        existing_plan = await db.get_attr(
+            dbClassName=TableNameEnum.UserPlan,
+            uid=user.uid,
+            where={"active": True},
+            db_pool=db_pool,
+        )
+        print(existing_plan)
+        if existing_plan:
+            await db.update(
+                dbClassName=TableNameEnum.UserPlan,
+                data={
+                    **existing_plan.model_dump(),
+                    "active": False,
+                },
+                db_pool=db_pool,
+            )
+
         new_plan, ok = await db.insert(
             dbClassName=TableNameEnum.UserPlan,
             data={
@@ -81,7 +99,7 @@ async def handle_checkout_completed(
                 detail="Failed to update transaction",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-        
+
     db_pool.commit()
     return True
 

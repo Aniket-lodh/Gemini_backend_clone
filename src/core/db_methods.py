@@ -11,8 +11,8 @@ from src.core.db_models import (
     UserProfile,
     Users,
 )
-from typing import List, Optional, Tuple, TypeVar, Union
-from sqlmodel import SQLModel, Session, or_, select
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
+from sqlmodel import SQLModel, Session, and_, or_, select
 from sqlalchemy.exc import IntegrityError
 
 T = TypeVar("T", bound=SQLModel)
@@ -248,10 +248,14 @@ class DB:
         chatroom_id: str = None,
         transaction_id: str = None,
         plan_id: str = None,
+        where: Optional[Dict[str, Any]] = None,
         db_pool: Session = None,
     ) -> Optional[Users | Chatrooms | Messages | Transactions | UserPlan | None]:
         try:
+            filters = []
+            statement = None
             table = None
+
             if dbClassName == TableNameEnum.Users:
                 statement = select(Users)
                 if uid:
@@ -287,7 +291,20 @@ class DB:
                     statement = statement.where(UserPlan.plan_id == plan_id)
                 if uid:
                     statement = statement.where(UserPlan.user_id == uid)
+                if where:
+                    if not isinstance(where, dict):
+                        raise TypeError("'where' must be a dictionary")
+                    
+                    # in this format -> {column_name: value}
+                    for k, v in where.items():
+                        col = getattr(UserPlan, k, None)
+                        if col is not None:
+                            filters.append(col == v)
 
+            if statement is None:
+                return None
+            elif filters:
+                statement = statement.where(and_(*filters))
 
             table = db_pool.exec(statement).first()
             return table
