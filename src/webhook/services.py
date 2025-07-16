@@ -60,9 +60,8 @@ async def handle_checkout_completed(
             where={"active": True},
             db_pool=db_pool,
         )
-        print(existing_plan)
         if existing_plan:
-            await db.update(
+            updated_plan, ok = await db.update(
                 dbClassName=TableNameEnum.UserPlan,
                 data={
                     **existing_plan.model_dump(),
@@ -70,7 +69,7 @@ async def handle_checkout_completed(
                 },
                 db_pool=db_pool,
             )
-
+            print("updated_plan", updated_plan)
         new_plan, ok = await db.insert(
             dbClassName=TableNameEnum.UserPlan,
             data={

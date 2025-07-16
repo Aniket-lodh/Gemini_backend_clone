@@ -181,6 +181,8 @@ class DB:
                 data = Messages(**data)
             elif dbClassName == TableNameEnum.Transactions:
                 data = Transactions(**data)
+            elif dbClassName == TableNameEnum.UserPlan:
+                data = UserPlan(**data)
             else:
                 return None, False
             data = self._upsert_commit(data=data, db_pool=db_pool, commit=commit)
