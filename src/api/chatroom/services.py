@@ -90,7 +90,7 @@ async def send_message(
     db_pool.commit()
     return format_response(
         message="Message sent and processing.",
-        data=schemas.Message(**created_message_record.model_dump()),
+        data=schemas.Message(**created_message_record.model_dump()).model_dump(),
     )
 
 
