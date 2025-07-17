@@ -1,5 +1,5 @@
 from typing import Annotated, Optional
-from pydantic import BaseModel, EmailStr, StringConstraints, constr, field_validator
+from pydantic import BaseModel, EmailStr, StringConstraints, field_validator
 
 
 class UserSchema(BaseModel):
@@ -107,6 +107,39 @@ class ChangePassword(BaseModel):
         StringConstraints(min_length=8, max_length=128),
     ]
 
+    @field_validator("new_password")
+    def validate_new_password_strength(cls, v: str) -> str:
+        if v.lower() == v or v.upper() == v:
+            raise ValueError(
+                "New password must include both uppercase and lowercase characters"
+            )
+        if not any(char.isdigit() for char in v):
+            raise ValueError("New password must include at least one number")
+        return v
+
+
+class ResetPassword(BaseModel):
+    mobile_number: Annotated[
+        str,
+        StringConstraints(strip_whitespace=True, min_length=10, max_length=15),
+    ]
+    otp: Annotated[
+        str,
+        StringConstraints(strip_whitespace=True, min_length=4, max_length=6),
+    ]
+    new_password: Annotated[
+        str,
+        StringConstraints(min_length=8, max_length=128),
+    ]
+
+    @field_validator("mobile_number")
+    def mobile_number_must_be_valid(cls, mobile_number: str) -> str:
+        if not mobile_number.isdigit():
+            raise ValueError("Mobile number must contain only digits")
+        if not (10 <= len(mobile_number) <= 15):
+            raise ValueError("Mobile number must be between 10 and 15 digits")
+        return mobile_number
+    
     @field_validator("new_password")
     def validate_new_password_strength(cls, v: str) -> str:
         if v.lower() == v or v.upper() == v:

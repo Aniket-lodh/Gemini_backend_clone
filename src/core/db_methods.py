@@ -183,6 +183,8 @@ class DB:
                 data = Transactions(**data)
             elif dbClassName == TableNameEnum.UserPlan:
                 data = UserPlan(**data)
+            elif dbClassName == TableNameEnum.Password:
+                data = Password(**data)
             else:
                 return None, False
             data = self._upsert_commit(data=data, db_pool=db_pool, commit=commit)

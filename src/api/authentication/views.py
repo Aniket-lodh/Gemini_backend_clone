@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session
 from src.decorators.auth_required import authentication_required
-from src.core.db_models import Users
 from src.decorators.catch_async import catch_async
 from src.core.db_pool import DataBasePool
 
@@ -41,7 +40,7 @@ async def send_otp(
 async def verify_otp(
     otp_verification: schemas.OTPVerification,
     db_pool: Session = Depends(DataBasePool.get_pool),
-) -> schemas.Token:
+):
     return await services.verify_otp(otp_verification, db_pool)
 
 
@@ -52,6 +51,15 @@ async def forgot_password(
     db_pool: Session = Depends(DataBasePool.get_pool),
 ):
     return await services.generate_otp(mobile_number.mobile_number, db_pool)
+
+
+@router.post("/reset-password", description="Reset password using OTP verification")
+@catch_async
+async def reset_password(
+    payload: schemas.ResetPassword,
+    db_pool: Session = Depends(DataBasePool.get_pool),
+):
+    return await services.reset_password(payload, db_pool)
 
 
 @router.post(

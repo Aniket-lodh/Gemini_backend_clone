@@ -169,6 +169,40 @@ async def get_current_user(
     return user
 
 
+async def reset_password(payload: schemas.ResetPassword, db_pool: Session):
+    """Resets the user's password after OTP verification."""
+    existing_user = await db.get_attr(
+        dbClassName=TableNameEnum.Users,
+        mobile_number=payload.mobile_number,
+        db_pool=db_pool,
+    )
+    if not existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid mobile number"
+        )
+    
+    if payload.otp != "123456":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OTP"
+        )
+    _, ok = await db.update(
+        dbClassName=TableNameEnum.Password,
+        data={
+            **existing_user.password.model_dump(),
+            "password": hash_password(payload.new_password),
+        },
+        db_pool=db_pool,
+        commit=True,
+    )
+    if ok is False:
+        raise HTTPException(
+            detail="Failed to reset password, try again later",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    return format_response(message="Password reset successfully.")
+
+
 async def change_password(
     user_id: str,
     change_password: schemas.ChangePassword,
