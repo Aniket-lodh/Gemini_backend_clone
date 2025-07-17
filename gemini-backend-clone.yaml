@@ -1,0 +1,514 @@
+openapi: 3.1.0
+info:
+  title: Gemini Backend Clone
+  description: Gemini Backend Clone API
+  version: 0.1.0
+paths:
+  /auth/signup:
+    post:
+      tags:
+        - Authentication
+      summary: Signup
+      description: Registers a new user with mobile number and optional info.
+      operationId: signup_auth_signup_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreate"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /auth/send-otp:
+    post:
+      tags:
+        - Authentication
+      summary: Send Otp
+      description: Sends an OTP to the user's mobile number (mocked, returned in response).
+      operationId: send_otp_auth_send_otp_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MobileNumber"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /auth/verify-otp:
+    post:
+      tags:
+        - Authentication
+      summary: Verify Otp
+      description: Verifies the OTP and returns a JWT token for the session.
+      operationId: verify_otp_auth_verify_otp_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OTPVerification"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Token"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /auth/forgot-password:
+    post:
+      tags:
+        - Authentication
+      summary: Forgot Password
+      description: Sends OTP for password reset.
+      operationId: forgot_password_auth_forgot_password_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MobileNumber"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /auth/change-password:
+    post:
+      tags:
+        - Authentication
+      summary: Change Password
+      description: Allows the user to change password while logged in.
+      operationId: change_password_auth_change_password_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePassword"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /user/me:
+    get:
+      tags:
+        - User
+      summary: Me
+      description: Returns details of the currently logged in user
+      operationId: me_user_me_get
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSchema"
+  /chatroom/:
+    get:
+      tags:
+        - Chatroom
+      summary: List Chatrooms
+      description: Lists all chatrooms for the authenticated user.
+      operationId: list_chatrooms_chatroom__get
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+    post:
+      tags:
+        - Chatroom
+      summary: Create Chatroom
+      description: Creates a new chatroom for the authenticated user.
+      operationId: create_chatroom_chatroom__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatroomCreate"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /chatroom/{id}:
+    get:
+      tags:
+        - Chatroom
+      summary: Get Chatroom
+      description: Retrieves detailed information about a specific chatroom.
+      operationId: get_chatroom_chatroom__id__get
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Id
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chatroom"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /chatroom/{id}/message:
+    post:
+      tags:
+        - Chatroom
+      summary: Send Message
+      description: Sends a message to a specific chatroom.
+      operationId: send_message_chatroom__id__message_post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageCreate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /subscribe/pro:
+    post:
+      tags:
+        - Subscription
+      summary: Subscribe Pro
+      description: Initiates a Pro subscription via Stripe Checkout.
+      operationId: subscribe_pro_subscribe_pro_post
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /subscribe/status:
+    get:
+      tags:
+        - Subscription
+      summary: Get Subscription Status
+      description: Checks the user's current subscription tier (Basic or Pro).
+      operationId: get_subscription_status_subscribe_status_get
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /subscribe/success:
+    get:
+      tags:
+        - Subscription
+      summary: Stripe Success Payment
+      description: Stripe Payment success redirect page.
+      operationId: stripe_success_payment_subscribe_success_get
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /subscribe/cancel:
+    get:
+      tags:
+        - Subscription
+      summary: Stripe Canceled Payment
+      description: Stripe Payment canceled redirect page.
+      operationId: stripe_canceled_payment_subscribe_cancel_get
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /webhook/stripe:
+    post:
+      tags:
+        - Webhooks
+      summary: Stripe Webhook
+      description: Handles Stripe webhook events (e.g., payment success/failure).
+      operationId: stripe_webhook_webhook_stripe_post
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Stripe Webhook Webhook Stripe Post
+components:
+  schemas:
+    ChangePassword:
+      properties:
+        old_password:
+          type: string
+          maxLength: 128
+          minLength: 8
+          title: Old Password
+        new_password:
+          type: string
+          maxLength: 128
+          minLength: 8
+          title: New Password
+      type: object
+      required:
+        - old_password
+        - new_password
+      title: ChangePassword
+    Chatroom:
+      properties:
+        chatroom_id:
+          type: string
+          title: Chatroom Id
+        name:
+          type: string
+          title: Name
+        owner_id:
+          type: string
+          title: Owner Id
+        created_at:
+          anyOf:
+            - type: integer
+            - type: "null"
+          title: Created At
+        updated_at:
+          anyOf:
+            - type: integer
+            - type: "null"
+          title: Updated At
+      type: object
+      required:
+        - chatroom_id
+        - name
+        - owner_id
+      title: Chatroom
+    ChatroomCreate:
+      properties:
+        name:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Name
+      type: object
+      title: ChatroomCreate
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: "#/components/schemas/ValidationError"
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    MessageCreate:
+      properties:
+        text:
+          type: string
+          title: Text
+      type: object
+      required:
+        - text
+      title: MessageCreate
+    MobileNumber:
+      properties:
+        mobile_number:
+          type: string
+          maxLength: 15
+          minLength: 10
+          title: Mobile Number
+      type: object
+      required:
+        - mobile_number
+      title: MobileNumber
+    OTPVerification:
+      properties:
+        mobile_number:
+          type: string
+          maxLength: 15
+          minLength: 10
+          title: Mobile Number
+        otp:
+          type: string
+          maxLength: 6
+          minLength: 4
+          title: Otp
+      type: object
+      required:
+        - mobile_number
+        - otp
+      title: OTPVerification
+    Token:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+        token_type:
+          type: string
+          title: Token Type
+      type: object
+      required:
+        - access_token
+        - token_type
+      title: Token
+    UserCreate:
+      properties:
+        mobile_number:
+          type: string
+          maxLength: 15
+          minLength: 10
+          title: Mobile Number
+        email:
+          anyOf:
+            - type: string
+              format: email
+            - type: "null"
+          title: Email
+        full_name:
+          anyOf:
+            - type: string
+              maxLength: 100
+            - type: "null"
+          title: Full Name
+        password:
+          type: string
+          maxLength: 128
+          minLength: 8
+          title: Password
+      type: object
+      required:
+        - mobile_number
+        - password
+      title: UserCreate
+    UserSchema:
+      properties:
+        uid:
+          type: string
+          title: Uid
+        mobile_number:
+          type: string
+          title: Mobile Number
+        email:
+          type: string
+          title: Email
+        full_name:
+          type: string
+          title: Full Name
+        disabled:
+          type: boolean
+          title: Disabled
+        confirmed:
+          type: boolean
+          title: Confirmed
+        created_at:
+          anyOf:
+            - type: integer
+            - type: "null"
+          title: Created At
+        updated_at:
+          anyOf:
+            - type: integer
+            - type: "null"
+          title: Updated At
+      type: object
+      required:
+        - uid
+        - mobile_number
+        - email
+        - full_name
+        - disabled
+        - confirmed
+      title: UserSchema
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      title: ValidationError
