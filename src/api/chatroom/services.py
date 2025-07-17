@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from src.core.db_models import TableNameEnum
+from src.core.db_models import Chatrooms, TableNameEnum
 from src.core.db_methods import DB
 from src.api.chatroom import schemas
 from src.celery import service
@@ -42,9 +42,7 @@ async def list_chatrooms(user_id: str, db_pool: Session) -> List[schemas.Chatroo
     )
 
 
-async def get_chatroom(
-    chatroom_id: int, user_id: int, db_pool: Session
-) -> schemas.Chatroom:
+async def get_chatroom(chatroom_id: int, user_id: int, db_pool: Session) -> Chatrooms:
     """Retrieves a specific chatroom, ensuring the user has access."""
     existing_chatroom = await db.get_attr(
         dbClassName=TableNameEnum.Chatrooms, chatroom_id=chatroom_id, db_pool=db_pool
@@ -91,6 +89,19 @@ async def send_message(
     return format_response(
         message="Message sent and processing.",
         data=schemas.Message(**created_message_record.model_dump()).model_dump(),
+    )
+
+
+async def get_chatroom_with_messages(chatroom_id: str, user_id: str, db_pool: Session):
+    """Fetches a chatroom and its messages if the user has access."""
+    chatroom = await get_chatroom(chatroom_id, user_id, db_pool)  # access check
+
+    return format_response(
+        message="Chatroom and messages retrieved.",
+        data={
+            "chatroom": chatroom.model_dump(),
+            "messages": [message.model_dump() for message in chatroom.messages],
+        },
     )
 
 

@@ -39,8 +39,7 @@ async def list_chatrooms(
 
 @router.get(
     "/{id}",
-    description="Retrieves detailed information about a specific chatroom.",
-    response_model=schemas.Chatroom,
+    description="Retrieves detailed information about a specific chatroom, including its messages.",
 )
 @catch_async
 @authentication_required
@@ -49,10 +48,7 @@ async def get_chatroom(
     request: Request,
     db_pool: Session = Depends(DataBasePool.get_pool),
 ):
-    existing_chatroom = await services.get_chatroom(id, request.state.user.uid, db_pool)
-    return format_response(
-        message="Chatroom details fetched", data=existing_chatroom.model_dump()
-    )
+    return await services.get_chatroom_with_messages(id, request.state.user.uid, db_pool)
 
 
 @router.post("/{id}/message", description="Sends a message to a specific chatroom.")

@@ -11,6 +11,7 @@ from src.api.authentication.views import router as auth_router
 from src.api.user.views import router as user_router
 from src.api.chatroom.views import router as chatroom_router
 from src.api.subscription.views import router as subscription_router
+from src.utils.format_response import format_response
 from src.webhook.views import router as webhook_router
 
 from src.core.limiter import limiter
@@ -52,6 +53,14 @@ app.include_router(user_router)
 app.include_router(chatroom_router)
 app.include_router(subscription_router)
 app.include_router(webhook_router)
+
+
+@app.get("/")
+async def root():
+    return format_response(
+        message="Welcome to Gemini Backend Clone",
+        data={"info": "Navigate to '/scalar' to get "},
+    )
 
 
 @app.get("/scalar", include_in_schema=False)

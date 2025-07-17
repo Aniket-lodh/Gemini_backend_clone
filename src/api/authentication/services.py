@@ -15,9 +15,7 @@ from src.utils.security import hash_password, verify_password
 db = DB()
 
 
-async def register_user(
-    user_create: schemas.UserCreate, db_pool: Session
-) -> schemas.UserSchema:
+async def register_user(user_create: schemas.UserCreate, db_pool: Session):
     """Registers a new user."""
     existing_user = await db.get_attr(
         dbClassName=TableNameEnum.Users,
@@ -180,7 +178,7 @@ async def reset_password(payload: schemas.ResetPassword, db_pool: Session):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid mobile number"
         )
-    
+
     if payload.otp != "123456":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OTP"

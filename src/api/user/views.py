@@ -12,7 +12,6 @@ router = APIRouter(prefix="/user", tags=["User"])
 @router.get(
     "/me",
     description="Returns details of the currently logged in user",
-    response_model=schemas.UserSchema,
 )
 @catch_async
 @authentication_required
