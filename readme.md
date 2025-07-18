@@ -16,7 +16,7 @@ This project is a backend implementation of a Gemini Chatroom clone, built with 
 
 - **Language**: Python (FastAPI)
 - **Database**: PostgreSQL
-- **Queue**: RabbitMQ
+- **Queue**: Celery
 - **Authentication**: JWT with OTP verification
 - **Payments**: Stripe (sandbox environment)
 - **External API**: Google Gemini
